@@ -3,14 +3,15 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, DollarSign, ShoppingBag, AlertTriangle, 
   Shield, CheckCircle, XCircle, MoreVertical,
-  TrendingUp, Flag, Wallet, Star // Changed from Package to Star
+  TrendingUp, Flag, Wallet // Removed Star import
 } from 'lucide-react';
 import { mockDB } from '../../services/mockDatabase';
+import { User, Product, Report, Withdrawal } from '../../types';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'overview' | 'users' | 'reports' | 'withdrawals' | 'verifications'>('overview');
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showUserActions, setShowUserActions] = useState(false);
   
   // Check admin authentication
@@ -22,16 +23,39 @@ const AdminDashboard: React.FC = () => {
   }, [navigate]);
 
   const stats = mockDB.getStats();
-  const users = Array.from(
-    (mockDB as any).data?.users?.values() || []
-  );
+  
+  // Safely get data from mockDB
+  const getUsers = (): User[] => {
+    try {
+      const users = Array.from((mockDB as any).data?.users?.values() || []);
+      return users.filter((user: any): user is User => user && typeof user === 'object' && 'id' in user);
+    } catch {
+      return [];
+    }
+  };
+  
+  const getReports = (): Report[] => {
+    try {
+      const reports = Array.from((mockDB as any).data?.reports?.values() || []);
+      return reports.filter((report: any): report is Report => report && typeof report === 'object' && 'id' in report);
+    } catch {
+      return [];
+    }
+  };
+  
+  const getWithdrawals = (): Withdrawal[] => {
+    try {
+      const withdrawals = Array.from((mockDB as any).data?.withdrawals?.values() || []);
+      return withdrawals.filter((withdrawal: any): withdrawal is Withdrawal => withdrawal && typeof withdrawal === 'object' && 'id' in withdrawal);
+    } catch {
+      return [];
+    }
+  };
+
+  const users = getUsers();
   const products = mockDB.getProducts();
-  const reports = Array.from(
-    (mockDB as any).data?.reports?.values() || []
-  );
-  const withdrawals = Array.from(
-    (mockDB as any).data?.withdrawals?.values() || []
-  );
+  const reports = getReports();
+  const withdrawals = getWithdrawals();
 
   const handleLogout = () => {
     localStorage.removeItem('admin-authenticated');
@@ -39,7 +63,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleUserAction = (action: 'ban' | 'verify' | 'unverify', userId: string) => {
-    const user = users.find((u: any) => u.id === userId);
+    const user = users.find(u => u.id === userId);
     if (!user) return;
 
     switch (action) {
@@ -62,7 +86,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   const handleReportAction = (reportId: string, action: 'resolve' | 'ban') => {
-    const report = reports.find((r: any) => r.id === reportId);
+    const report = reports.find(r => r.id === reportId);
     if (!report) return;
 
     if (action === 'resolve') {
@@ -227,7 +251,7 @@ const AdminDashboard: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-6">User Management</h2>
               
               <div className="space-y-4">
-                {users.map((user: any) => (
+                {users.map((user) => (
                   <div key={user.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl">
                     <div className="flex items-center space-x-4">
                       <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold">
@@ -309,7 +333,7 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-gray-600">No pending reports to review</p>
                   </div>
                 ) : (
-                  reports.map((report: any) => (
+                  reports.map((report) => (
                     <div key={report.id} className="border border-gray-200 rounded-xl p-4">
                       <div className="flex justify-between items-start mb-3">
                         <div>
@@ -372,8 +396,8 @@ const AdminDashboard: React.FC = () => {
                     <p className="text-gray-600">No pending withdrawal requests</p>
                   </div>
                 ) : (
-                  withdrawals.map((withdrawal: any) => {
-                    const user = users.find((u: any) => u.id === withdrawal.sellerId);
+                  withdrawals.map((withdrawal) => {
+                    const user = users.find(u => u.id === withdrawal.sellerId);
                     return (
                       <div key={withdrawal.id} className="border border-gray-200 rounded-xl p-4">
                         <div className="flex justify-between items-start mb-4">
@@ -433,7 +457,7 @@ const AdminDashboard: React.FC = () => {
               <h2 className="text-xl font-bold text-gray-900 mb-6">Seller Verification Requests</h2>
               
               <div className="space-y-4">
-                {users.filter((u: any) => u.role === 'SELLER' && u.verificationStatus === 'PENDING').length === 0 ? (
+                {users.filter(u => u.role === 'SELLER' && u.verificationStatus === 'PENDING').length === 0 ? (
                   <div className="text-center py-12">
                     <Shield className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                     <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pending Requests</h3>
@@ -441,8 +465,8 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 ) : (
                   users
-                    .filter((u: any) => u.role === 'SELLER' && u.verificationStatus === 'PENDING')
-                    .map((user: any) => {
+                    .filter(u => u.role === 'SELLER' && u.verificationStatus === 'PENDING')
+                    .map((user) => {
                       const userProducts = products.filter(p => p.sellerId === user.id);
                       const totalSales = userProducts.reduce((sum, p) => sum + p.totalSales, 0);
                       
