@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom'; // Removed Outlet
 import { 
   Home, ShoppingBag, User, Wallet, LogOut, 
   Menu, X, BarChart, Package
