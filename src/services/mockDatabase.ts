@@ -90,7 +90,7 @@ class MockDatabase {
     withdrawals: []
   };
 
-  private data: {
+  private data!: { // Added ! to indicate definite assignment
     users: Map<string, User>;
     products: Map<string, Product>;
     purchases: Map<string, Purchase>;
@@ -113,15 +113,20 @@ class MockDatabase {
   private loadFromStorage() {
     const saved = localStorage.getItem(this.storageKey);
     if (saved) {
-      const parsed = JSON.parse(saved);
-      this.data = {
-        users: new Map(parsed.users.map((u: User) => [u.id, { ...u, createdAt: new Date(u.createdAt), updatedAt: new Date(u.updatedAt) }])),
-        products: new Map(parsed.products.map((p: Product) => [p.id, { ...p, createdAt: new Date(p.createdAt), updatedAt: new Date(p.updatedAt) }])),
-        purchases: new Map(parsed.purchases.map((p: Purchase) => [p.id, { ...p, createdAt: new Date(p.createdAt) }])),
-        reports: new Map(parsed.reports.map((r: Report) => [r.id, { ...r, createdAt: new Date(r.createdAt) }])),
-        withdrawals: new Map(parsed.withdrawals.map((w: Withdrawal) => [w.id, { ...w, createdAt: new Date(w.createdAt) }])),
-        currentUser: parsed.currentUser
-      };
+      try {
+        const parsed = JSON.parse(saved);
+        this.data = {
+          users: new Map(parsed.users?.map((u: User) => [u.id, { ...u, createdAt: new Date(u.createdAt), updatedAt: new Date(u.updatedAt) }]) || []),
+          products: new Map(parsed.products?.map((p: Product) => [p.id, { ...p, createdAt: new Date(p.createdAt), updatedAt: new Date(p.updatedAt) }]) || []),
+          purchases: new Map(parsed.purchases?.map((p: Purchase) => [p.id, { ...p, createdAt: new Date(p.createdAt) }]) || []),
+          reports: new Map(parsed.reports?.map((r: Report) => [r.id, { ...r, createdAt: new Date(r.createdAt) }]) || []),
+          withdrawals: new Map(parsed.withdrawals?.map((w: Withdrawal) => [w.id, { ...w, createdAt: new Date(w.createdAt) }]) || []),
+          currentUser: parsed.currentUser || null
+        };
+      } catch (error) {
+        console.error('Error loading from storage:', error);
+        this.resetToDemo();
+      }
     } else {
       this.resetToDemo();
     }
@@ -242,21 +247,21 @@ class MockDatabase {
     return products;
   }
 
-createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'totalSales' | 'isActive'> & { isActive?: boolean }): Product {
-  const id = `prod-${Date.now()}`;
-  const newProduct: Product = {
-    ...product,
-    id,
-    averageRating: 0,
-    totalSales: 0,
-    isActive: product.isActive !== undefined ? product.isActive : true,
-    createdAt: new Date(),
-    updatedAt: new Date()
-  };
-  this.data.products.set(id, newProduct);
-  this.saveToStorage();
-  return newProduct;
-}
+  createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'totalSales' | 'isActive'> & { isActive?: boolean }): Product {
+    const id = `prod-${Date.now()}`;
+    const newProduct: Product = {
+      ...product,
+      id,
+      averageRating: 0,
+      totalSales: 0,
+      isActive: product.isActive !== undefined ? product.isActive : true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.data.products.set(id, newProduct);
+    this.saveToStorage();
+    return newProduct;
+  }
 
   // Purchase Methods
   purchaseProduct(buyerId: string, productId: string): Purchase | null {
@@ -317,12 +322,12 @@ createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'average
     // Update product average rating
     const product = this.data.products.get(purchase.productId);
     if (product) {
-      const purchases = Array.from(this.data.purchases.values())
+      const purchasesForProduct = Array.from(this.data.purchases.values()) // Fixed typo: purchages -> purchasesForProduct
         .filter(p => p.productId === purchase.productId && p.userRating !== null);
       
-      if (purchages.length > 0) {
-        const totalRating = purchases.reduce((sum, p) => sum + (p.userRating || 0), 0);
-        product.averageRating = totalRating / purchases.length;
+      if (purchasesForProduct.length > 0) {
+        const totalRating = purchasesForProduct.reduce((sum, p) => sum + (p.userRating || 0), 0);
+        product.averageRating = totalRating / purchasesForProduct.length;
         product.updatedAt = new Date();
         this.data.products.set(product.id, product);
       }
@@ -402,12 +407,15 @@ createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'average
     const users = Array.from(this.data.users.values());
     const purchases = Array.from(this.data.purchases.values());
     
+    const totalReports = Array.from(this.data.reports.values());
+    const totalWithdrawals = Array.from(this.data.withdrawals.values());
+    
     return {
       totalUsers: users.length,
       totalVolume: purchases.reduce((sum, p) => sum + p.pricePaid, 0),
       totalSales: purchases.length,
-      pendingReports: Array.from(this.data.reports.values()).filter(r => r.status === 'PENDING').length,
-      pendingWithdrawals: Array.from(this.data.withdrawals.values()).filter(w => w.status === 'PENDING').length
+      pendingReports: totalReports.filter(r => r.status === 'PENDING').length,
+      pendingWithdrawals: totalWithdrawals.filter(w => w.status === 'PENDING').length
     };
   }
 }
