@@ -49,14 +49,15 @@ const CreateProduct: React.FC = () => {
       return;
     }
 
-    // Create product
-    const product = mockDB.createProduct({
+    // Create product with all required fields
+    mockDB.createProduct({
       title: formData.title,
       description: formData.description,
       price: price,
       category: formData.category,
       hiddenLink: formData.hiddenLink,
       sellerId: user.id,
+      isActive: true, // Added missing required field
     });
 
     // Simulate API delay
