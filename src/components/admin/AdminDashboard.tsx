@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, DollarSign, ShoppingBag, AlertTriangle, 
   Shield, CheckCircle, XCircle, MoreVertical,
-  TrendingUp, Flag, Wallet // Removed Star import
+  TrendingUp, Flag, Wallet
 } from 'lucide-react';
 import { mockDB } from '../../services/mockDatabase';
-import { User, Product, Report, Withdrawal } from '../../types';
+import { User, Report, Withdrawal } from '../../types'; // Removed Product
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
