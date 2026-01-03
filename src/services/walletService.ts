@@ -16,7 +16,7 @@ class WalletService {
     return { address };
   }
 
-  static async getBalance(address: string): Promise<number> {
+  static async getBalance(): Promise<number> { // Removed address parameter
     // In real implementation, this would query the blockchain
     // For mock, we'll get from our database
     return 0;
