@@ -44,7 +44,7 @@ export const showTelegramAlert = (message: string) => {
 export const showTelegramConfirm = (message: string): Promise<boolean> => {
   return new Promise((resolve) => {
     if (window.Telegram?.WebApp?.showConfirm) {
-      window.Telegram.WebApp.showConfirm(message, (confirmed: boolean) => { // Added type
+      window.Telegram.WebApp.showConfirm(message, (confirmed: boolean) => {
         resolve(confirmed);
       });
     } else {
