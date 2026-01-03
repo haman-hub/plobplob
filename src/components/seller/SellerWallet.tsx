@@ -7,10 +7,11 @@ const SellerWallet: React.FC = () => {
   const [isRequesting, setIsRequesting] = useState(false);
 
   const user = mockDB.getCurrentUser();
-  const withdrawals = Array.from(
-    mockDB.getCurrentUser() ? 
-    Object.values(mockDB) : []
-  ).filter((item: any) => item.sellerId === user?.id);
+  
+  // Get withdrawals safely
+  const withdrawals = user ? 
+    Array.from((mockDB as any).data?.withdrawals?.values() || [])
+      .filter((w: any) => w.sellerId === user.id) : [];
 
   const pendingWithdrawals = withdrawals.filter((w: any) => w.status === 'PENDING');
   const completedWithdrawals = withdrawals.filter((w: any) => w.status === 'APPROVED');
@@ -50,18 +51,19 @@ const SellerWallet: React.FC = () => {
     }, 1500);
   };
 
-  const formatStatus = (status: string) => {
-    switch (status) {
-      case 'PENDING':
-        return { color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock };
-      case 'APPROVED':
-        return { color: 'text-green-600', bg: 'bg-green-50', icon: CheckCircle };
-      case 'REJECTED':
-        return { color: 'text-red-600', bg: 'bg-red-50', icon: XCircle };
-      default:
-        return { color: 'text-gray-600', bg: 'bg-gray-50', icon: Clock };
-    }
-  };
+  // Comment out or remove unused formatStatus function
+  // const formatStatus = (status: string) => {
+  //   switch (status) {
+  //     case 'PENDING':
+  //       return { color: 'text-amber-600', bg: 'bg-amber-50', icon: Clock };
+  //     case 'APPROVED':
+  //       return { color: 'text-green-600', bg: 'bg-green-50', icon: CheckCircle };
+  //     case 'REJECTED':
+  //       return { color: 'text-red-600', bg: 'bg-red-50', icon: XCircle };
+  //     default:
+  //       return { color: 'text-gray-600', bg: 'bg-gray-50', icon: Clock };
+  //   }
+  // };
 
   return (
     <div className="space-y-6">
@@ -85,7 +87,7 @@ const SellerWallet: React.FC = () => {
         </div>
         <div className="text-4xl font-bold mb-2">{user?.balance.toFixed(2)} TON</div>
         <div className="text-blue-200 text-sm">
-          ≈ ${(user?.balance || 0 * 2.5).toFixed(2)} USD (estimate)
+          ≈ ${((user?.balance || 0) * 2.5).toFixed(2)} USD (estimate)
         </div>
       </div>
 
