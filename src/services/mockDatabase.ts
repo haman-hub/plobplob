@@ -242,21 +242,21 @@ class MockDatabase {
     return products;
   }
 
-  createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'totalSales'>): Product {
-    const id = `prod-${Date.now()}`;
-    const newProduct: Product = {
-      ...product,
-      id,
-      averageRating: 0,
-      totalSales: 0,
-      isActive: true,
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-    this.data.products.set(id, newProduct);
-    this.saveToStorage();
-    return newProduct;
-  }
+createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'averageRating' | 'totalSales' | 'isActive'> & { isActive?: boolean }): Product {
+  const id = `prod-${Date.now()}`;
+  const newProduct: Product = {
+    ...product,
+    id,
+    averageRating: 0,
+    totalSales: 0,
+    isActive: product.isActive !== undefined ? product.isActive : true,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  this.data.products.set(id, newProduct);
+  this.saveToStorage();
+  return newProduct;
+}
 
   // Purchase Methods
   purchaseProduct(buyerId: string, productId: string): Purchase | null {
