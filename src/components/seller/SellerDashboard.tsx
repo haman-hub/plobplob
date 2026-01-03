@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Package, DollarSign, Users, AlertCircle, Plus, Edit, Trash2, Shield } from 'lucide-react';
+import { TrendingUp, Package, DollarSign, Users, AlertCircle, Plus, Edit, Trash2, Shield, Star } from 'lucide-react'; // Added Star import
 import { mockDB } from '../../services/mockDatabase';
 
 const SellerDashboard: React.FC = () => {
@@ -9,13 +9,14 @@ const SellerDashboard: React.FC = () => {
   
   const user = mockDB.getCurrentUser();
   const products = mockDB.getProducts().filter(p => p.sellerId === user?.id);
-  const purchases = Array.from(
-    mockDB.getCurrentUser() ? 
-    Object.values(mockDB) : []
-  ).filter((item: any) => {
-    const product = mockDB.getProducts().find(p => p.id === item.productId);
-    return product?.sellerId === user?.id;
-  });
+  
+  // Get purchases safely
+  const purchases = user ? 
+    Array.from((mockDB as any).data?.purchases?.values() || [])
+      .filter((purchase: any) => {
+        const product = mockDB.getProducts().find(p => p.id === purchase.productId);
+        return product?.sellerId === user.id;
+      }) : [];
 
   const totalRevenue = purchases.reduce((sum: number, p: any) => sum + p.pricePaid, 0);
   const totalSales = purchases.length;
