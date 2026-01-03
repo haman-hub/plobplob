@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, Package, DollarSign, Users, AlertCircle, Plus, Edit, Trash2, Shield, Star } from 'lucide-react'; // Added Star import
+import { TrendingUp, Package, DollarSign, Users, AlertCircle, Plus, Edit, Trash2, Shield, Star } from 'lucide-react';
 import { mockDB } from '../../services/mockDatabase';
 
 const SellerDashboard: React.FC = () => {
@@ -10,7 +10,7 @@ const SellerDashboard: React.FC = () => {
   const user = mockDB.getCurrentUser();
   const products = mockDB.getProducts().filter(p => p.sellerId === user?.id);
   
-  // Get purchases safely - removed unused productId variable
+  // Get purchases safely - FIXED: removed unused productId parameter
   const purchases = user ? 
     Array.from((mockDB as any).data?.purchases?.values() || [])
       .filter((purchase: any) => {
