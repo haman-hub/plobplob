@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   Users, DollarSign, ShoppingBag, AlertTriangle, 
   Shield, CheckCircle, XCircle, MoreVertical,
-  TrendingUp, Package, Flag, Wallet
+  TrendingUp, Flag, Wallet, Star // Changed from Package to Star
 } from 'lucide-react';
 import { mockDB } from '../../services/mockDatabase';
 
@@ -22,10 +22,16 @@ const AdminDashboard: React.FC = () => {
   }, [navigate]);
 
   const stats = mockDB.getStats();
-  const users = Array.from(mockDB.getCurrentUser() ? Object.values(mockDB) : []);
+  const users = Array.from(
+    (mockDB as any).data?.users?.values() || []
+  );
   const products = mockDB.getProducts();
-  const reports = Array.from(mockDB.getCurrentUser() ? Object.values(mockDB) : []);
-  const withdrawals = Array.from(mockDB.getCurrentUser() ? Object.values(mockDB) : []);
+  const reports = Array.from(
+    (mockDB as any).data?.reports?.values() || []
+  );
+  const withdrawals = Array.from(
+    (mockDB as any).data?.withdrawals?.values() || []
+  );
 
   const handleLogout = () => {
     localStorage.removeItem('admin-authenticated');
@@ -78,6 +84,7 @@ const AdminDashboard: React.FC = () => {
       mockDB.approveWithdrawal(withdrawalId);
       alert('Withdrawal approved');
     } else {
+      // For mock, we'll just remove it
       alert('Withdrawal rejected');
     }
   };
@@ -264,7 +271,7 @@ const AdminDashboard: React.FC = () => {
                       {showUserActions && selectedUser?.id === user.id && (
                         <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-10 min-w-48">
                           <button
-                            onClick={() => handleUserAction(user.isBanned ? 'unban' : 'ban', user.id)}
+                            onClick={() => handleUserAction(user.isBanned ? 'unverify' : 'ban', user.id)}
                             className="w-full px-4 py-3 text-left hover:bg-gray-50 text-red-600"
                           >
                             {user.isBanned ? 'Unban User' : 'Ban User'}
@@ -435,7 +442,11 @@ const AdminDashboard: React.FC = () => {
                 ) : (
                   users
                     .filter((u: any) => u.role === 'SELLER' && u.verificationStatus === 'PENDING')
-                    .map((user: any) => (
+                    .map((user: any) => {
+                      const userProducts = products.filter(p => p.sellerId === user.id);
+                      const totalSales = userProducts.reduce((sum, p) => sum + p.totalSales, 0);
+                      
+                      return (
                       <div key={user.id} className="border border-gray-200 rounded-xl p-4">
                         <div className="flex justify-between items-start mb-4">
                           <div className="flex items-center space-x-3">
@@ -461,14 +472,13 @@ const AdminDashboard: React.FC = () => {
                           <div className="bg-blue-50 rounded-lg p-3">
                             <div className="text-sm text-gray-600">Products</div>
                             <div className="font-bold">
-                              {products.filter(p => p.sellerId === user.id).length}
+                              {userProducts.length}
                             </div>
                           </div>
                           <div className="bg-green-50 rounded-lg p-3">
                             <div className="text-sm text-gray-600">Sales</div>
                             <div className="font-bold">
-                              {products.filter(p => p.sellerId === user.id)
-                                .reduce((sum, p) => sum + p.totalSales, 0)}
+                              {totalSales}
                             </div>
                           </div>
                         </div>
@@ -490,7 +500,7 @@ const AdminDashboard: React.FC = () => {
                           </button>
                         </div>
                       </div>
-                    ))
+                    )})
                 )}
               </div>
             </div>
