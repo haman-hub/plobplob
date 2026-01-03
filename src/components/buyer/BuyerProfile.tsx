@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Star, FileText, Flag, Link, Copy, Check, LogOut } from 'lucide-react';
+import { ShoppingBag, Star, FileText, Flag, Copy, Check, LogOut } from 'lucide-react'; // Removed Link
 import { mockDB } from '../../services/mockDatabase';
 
 const BuyerProfile: React.FC = () => {
@@ -11,17 +11,18 @@ const BuyerProfile: React.FC = () => {
   const [copiedLinks, setCopiedLinks] = useState<Record<string, boolean>>({});
 
   const user = mockDB.getCurrentUser();
-  const purchases = Array.from(
-    mockDB.getCurrentUser() ? 
-    Object.values(mockDB) : []
-  ).filter((item: any) => item.buyerId === user?.id);
+  
+  // Get purchases safely
+  const purchases = user ? 
+    Array.from((mockDB as any).data?.purchases?.values() || [])
+      .filter((p: any) => p.buyerId === user.id) : [];
 
   const handleLogout = () => {
     mockDB.setCurrentUser(null);
     navigate('/');
   };
 
-  const handleRateProduct = (purchaseId: string, productId: string) => {
+  const handleRateProduct = (purchaseId: string) => { // Removed unused productId
     mockDB.ratePurchase(purchaseId, ratingValue);
     setRatingProduct(null);
     setRatingValue(5);
@@ -36,9 +37,11 @@ const BuyerProfile: React.FC = () => {
   };
 
   const reportProduct = (productId: string) => {
+    if (!user) return;
+    
     const report = mockDB.createReport({
       productId,
-      reporterId: user!.id,
+      reporterId: user.id,
       reason: 'SCAM',
       description: 'User reported this product'
     });
@@ -236,7 +239,7 @@ const BuyerProfile: React.FC = () => {
                           Cancel
                         </button>
                         <button
-                          onClick={() => handleRateProduct(purchase.id, purchase.productId)}
+                          onClick={() => handleRateProduct(purchase.id)}
                           className="flex-1 bg-amber-500 text-white py-2 rounded-lg hover:bg-amber-600"
                         >
                           Submit Rating
