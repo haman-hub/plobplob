@@ -10,7 +10,7 @@ const SellerDashboard: React.FC = () => {
   const user = mockDB.getCurrentUser();
   const products = mockDB.getProducts().filter(p => p.sellerId === user?.id);
   
-  // Get purchases safely
+  // Get purchases safely - removed unused productId variable
   const purchases = user ? 
     Array.from((mockDB as any).data?.purchases?.values() || [])
       .filter((purchase: any) => {
